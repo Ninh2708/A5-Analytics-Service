@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Analytics Control Tower</title>
+  <style>
+    :root{
+      --bg:#07111f;
+      --bg2:#0d1b2a;
+      --panel:rgba(10,18,32,.78);
+      --panel2:rgba(15,28,48,.92);
+      --line:rgba(255,255,255,.08);
+      --text:#eaf2ff;
+      --muted:#97a8bf;
+      --accent:#67e8f9;
+      --accent2:#f97316;
+      --good:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --shadow:0 24px 80px rgba(0,0,0,.45);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      line-height:1.5;
+      word-break:normal;
+      overflow-wrap:anywhere;
+      background:
+        radial-gradient(circle at top left, rgba(103,232,249,.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(249,115,22,.14), transparent 22%),
+        linear-gradient(180deg, #040816 0%, var(--bg) 38%, #050b14 100%);
+      overflow-x:hidden;
+    }
+    .wrap{max-width:1440px;margin:0 auto;padding:28px}
+    .hero{
+      display:grid;
+      grid-template-columns:minmax(0,1.5fr) minmax(320px,.95fr);
+      gap:20px;
+      align-items:stretch;
+      margin-bottom:20px;
+    }
+    .panel{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+    .brand{
+      padding:28px;
+      position:relative;
+      overflow:hidden;
+    }
+    .brand::after{
+      content:"";
+      position:absolute;
+      inset:auto -120px -120px auto;
+      width:280px;height:280px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(103,232,249,.35), rgba(103,232,249,0) 65%);
+      filter:blur(10px);
+      pointer-events:none;
+    }
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:8px 12px;border:1px solid var(--line);
+      border-radius:999px;color:var(--muted);font-size:12px;
+      letter-spacing:.12em;text-transform:uppercase;
+      background:rgba(255,255,255,.03)
+    }
+    .eyebrow .dot{width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 16px var(--good)}
+    h1{
+      margin:18px 0 10px;
+      font-size:clamp(2rem,4vw,4.5rem);
+      line-height:.95;
+      letter-spacing:-.05em;
+      max-width:14ch;
+      text-wrap:balance;
+    }
+    .subtitle{
+      margin:0;
+      max-width:72ch;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.7;
+      text-wrap:pretty;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+      margin-top:22px;
+    }
+    .mini{
+      padding:14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      border-radius:18px;
+    }
+    .mini .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.12em}
+    .mini .value{font-size:22px;font-weight:700;margin-top:8px}
+    .side{
+      padding:24px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .side-header{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+    }
+    .clock{font-size:12px;color:var(--muted);text-align:right}
+    .stack{display:grid;gap:12px}
+    .status-card{
+      padding:14px 16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      border-radius:16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .status-card strong{display:block;font-size:14px;margin-bottom:4px}
+    .status-card span{color:var(--muted);font-size:12px}
+    .pill{
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid var(--line);
+      white-space:nowrap;
+    }
+    .pill.good{background:rgba(52,211,153,.12);color:#bffbe0;border-color:rgba(52,211,153,.25)}
+    .pill.warn{background:rgba(251,191,36,.12);color:#ffe7a3;border-color:rgba(251,191,36,.25)}
+    .pill.bad{background:rgba(251,113,133,.12);color:#ffd0d8;border-color:rgba(251,113,133,.25)}
+    .panel-grid{
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      gap:20px;
+      margin-bottom:20px;
+    }
+    .section{
+      padding:22px;
+    }
+    .span-4{grid-column:span 4}
+    .span-6{grid-column:span 6}
+    .span-8{grid-column:span 8}
+    .span-12{grid-column:span 12}
+    .section-head{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px
+    }
+    .section-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .section-title{margin:0;font-size:18px;letter-spacing:-.02em}
+    .section-sub{margin:0;color:var(--muted);font-size:13px}
+    .filter-select{
+      appearance:none;
+      min-width:160px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-size:13px;
+    }
+    .filter-select:focus{
+      outline:none;
+      border-color:rgba(103,232,249,.45);
+      box-shadow:0 0 0 3px rgba(103,232,249,.12);
+    }
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+    }
+    .api-card{
+      padding:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      border-radius:18px;
+    }
+    .api-card .kicker{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+    .api-card h3{margin:8px 0 10px;font-size:16px}
+    .api-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+    .api-list{
+      display:grid;
+      gap:10px;
+    }
+    .api-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+    }
+    .api-row code{
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      color:#dbeafe;
+    }
+    .api-row small{color:var(--muted)}
+    .good-text{color:var(--good)}
+    .warn-text{color:var(--warn)}
+    .bad-text{color:var(--bad)}
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+    .tab-btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-size:13px;
+      transition:transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+    .tab-btn:hover{transform:translateY(-1px);border-color:rgba(103,232,249,.35)}
+    .tab-btn.active{background:rgba(103,232,249,.15);border-color:rgba(103,232,249,.45)}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+    .chart-grid{
+      display:grid;
+      grid-template-columns:1.4fr .9fr;
+      gap:14px;
+    }
+    .chart-card{
+      padding:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      border-radius:18px;
+      min-height:320px;
+    }
+    .chart-card h3{
+      margin:0 0 12px;
+      font-size:14px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.12em;
+    }
+    .chart-card canvas{width:100% !important;height:250px !important}
+    .group-list{
+      display:grid;
+      gap:10px;
+    }
+    .group-block{
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+    }
+    .group-block strong{display:block;margin-bottom:6px}
+    .group-block p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:16px;
+    }
+    .table th,.table td{
+      text-align:left;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      font-size:13px;
+    }
+    .table th{color:var(--muted);font-weight:600}
+    .table td code{font-family:Consolas,monospace;color:#dbeafe}
+    .feed{
+      display:grid;
+      gap:12px;
+    }
+    .feed-item{
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+    }
+    .feed-item .meta{
+      display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:12px;color:var(--muted)
+    }
+    .feed-item pre{
+      margin:0;
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-size:12px;
+      color:#d8e6ff;
+      line-height:1.6;
+    }
+    .footer{
+      margin:24px 0 8px;
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    @media (max-width: 1080px){
+      .hero,.panel-grid,.cards,.chart-grid{grid-template-columns:1fr}
+      .span-4,.span-6,.span-8,.span-12{grid-column:span 1}
+      .hero-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media (max-width: 640px){
+      .wrap{padding:16px}
+      .hero-grid{grid-template-columns:1fr}
+      h1{max-width:unset}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <section class="panel brand">
+        <div class="eyebrow"><span class="dot"></span> Analytics Control Tower</div>
+        <h1>Toan bo he thong, mot man hinh.</h1>
+        <p class="subtitle">Trang nay tong hop trang thai service, nhom API, dashboard noi bat, camera, sensor, core business va AI Vision. Du lieu duoc cap nhat truc tiep tu cac endpoint hien co cua Analytics Service.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;align-items:center;">
+          <button id="loadSampleBtn" class="tab-btn" type="button">Tạo dữ liệu mẫu</button>
+          <button id="clearSampleBtn" class="tab-btn" type="button">Xóa dữ liệu mẫu</button>
+          <span class="pill good" id="sampleStatus">Sẵn sàng tạo dữ liệu mẫu</span>
+        </div>
+        <div class="hero-grid">
+          <div class="mini">
+            <div class="label">Service</div>
+            <div class="value" id="svcName">Analytics</div>
+          </div>
+          <div class="mini">
+            <div class="label">Version</div>
+            <div class="value" id="svcVersion">-</div>
+          </div>
+          <div class="mini">
+            <div class="label">API State</div>
+            <div class="value" id="apiState">Loading</div>
+          </div>
+          <div class="mini">
+            <div class="label">Last Sync</div>
+            <div class="value" id="lastSync">--:--</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel side">
+        <div class="side-header">
+          <div>
+            <div class="eyebrow"><span class="dot"></span> Live status</div>
+          </div>
+          <div class="clock" id="clock"></div>
+        </div>
+        <div class="stack" id="statusStack">
+          <div class="status-card">
+            <div>
+              <strong>Overall health</strong>
+              <span>Root + /health + dashboard probes</span>
+            </div>
+            <div class="pill warn" id="healthPill">Checking</div>
+          </div>
+          <div class="status-card">
+            <div>
+              <strong>Core Business</strong>
+              <span>Proxy endpoints & summary feed</span>
+            </div>
+            <div class="pill warn" id="corePill">Checking</div>
+          </div>
+          <div class="status-card">
+            <div>
+              <strong>Storage</strong>
+              <span>Camera/Sensor/Vision tables</span>
+            </div>
+            <div class="pill good" id="storePill">Sẵn sàng</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="panel-grid">
+      <section class="panel section span-8">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Tổng quan hệ thống</h2>
+            <p class="section-sub">Các số liệu chính từ `/api/v1/analytics/dashboard` và metrics theo ngày.</p>
+          </div>
+          <span class="pill good">Auto refresh</span>
+        </div>
+        <div class="cards" id="summaryCards">
+          <div class="api-card">
+            <div class="kicker">Camera</div>
+            <h3 id="cameraCount">--</h3>
+            <p>Total camera events stored in analytics DB.</p>
+          </div>
+          <div class="api-card">
+            <div class="kicker">Sensor</div>
+            <h3 id="sensorCount">--</h3>
+            <p>Total sensor events stored in analytics DB.</p>
+          </div>
+          <div class="api-card">
+            <div class="kicker">Anomalies</div>
+            <h3 id="anomalyCount">--</h3>
+            <p>Total anomaly events from Core Business.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel section span-4">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">System Tabs</h2>
+            <p class="section-sub">Switch between A1, A2, A4 and A6 views.</p>
+          </div>
+        </div>
+        <div class="tabs" id="systemTabs">
+          <button class="tab-btn active" data-tab="tab-overview">Overview</button>
+          <button class="tab-btn" data-tab="tab-a3">A3 Access</button>
+          <button class="tab-btn" data-tab="tab-a1">A1 Sensor</button>
+          <button class="tab-btn" data-tab="tab-a2">A2 Camera</button>
+          <button class="tab-btn" data-tab="tab-a4">A4 Vision</button>
+          <button class="tab-btn" data-tab="tab-a6">A6 Core</button>
+          <button class="tab-btn" data-tab="tab-a7">A7 Notify</button>
+        </div>
+        <div class="tab-panel active" id="tab-overview">
+          <div class="group-list">
+            <div class="group-block">
+              <strong>Toàn hệ thống</strong>
+              <p>Camera, Sensor, Vision, Core proxies, dashboard and health are all surfaced here.</p>
+            </div>
+            <div class="group-block">
+              <strong>Trạng thái</strong>
+              <p>Dùng phần biểu đồ bên dưới để xem xu hướng 7 ngày và bảng endpoint để kiểm tra sức khỏe dịch vụ.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-a3">
+          <div class="group-list">
+            <div class="group-block">
+              <strong>POST /api/v1/events/access</strong>
+              <p>Access Gate nhan swipe events, xu ly grant/deny va tra ve ket qua chuan hoa.</p>
+            </div>
+            <div class="group-block">
+              <strong>GET /api/v1/logs</strong>
+              <p>Truy van logs gan nhat, phuc vu audit va debug RFID/UID.</p>
+            </div>
+            <div class="group-block">
+              <strong>GET /api/v1/analytics</strong>
+              <p>Thong ke tong quan cua Access Gate: tong event, granted/denied, theo huong va theo cua.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-a1">
+          <div class="group-list">
+            <div class="group-block">
+              <strong>POST /api/v1/analytics/sensor</strong>
+              <p>Stores processed IoT sensor events with status, alert level and reason.</p>
+            </div>
+            <div class="group-block">
+              <strong>GET /api/v1/analytics/sensor</strong>
+              <p>Lists stored sensor events with filters for device, status and alert level.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-a2">
+          <div class="group-list">
+            <div class="group-block">
+              <strong>POST /api/v1/analytics/camera</strong>
+              <p>Stores camera detections, motion score and risk level from A2 stream.</p>
+            </div>
+            <div class="group-block">
+              <strong>GET /api/v1/analytics/camera</strong>
+              <p>Filters stored camera events by camera, risk and pagination.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-a4">
+          <div class="group-list">
+            <div class="group-block">
+              <strong>POST /api/v1/analytics/vision-detections</strong>
+              <p>Receives AI Vision detections for trend analysis and future dashboards.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-a6">
+          <div class="group-list">
+            <div class="group-block">
+              <strong>Core proxy endpoints</strong>
+              <p>Health, events, anomaly feed, alerts and summary are proxied to Core Business.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-a7">
+          <div class="group-list">
+            <div class="group-block">
+              <strong>POST /notifications</strong>
+              <p>Core Business gui alert sang Notification Service qua Telegram va Email.</p>
+            </div>
+            <div class="group-block">
+              <strong>GET /notifications</strong>
+              <p>Analytics hoac dashboard co the tu dong cap nhat lich su thong ke cac alert da gui.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel section span-8">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Xu hướng</h2>
+            <p class="section-sub">7 ngày gần nhất từ `/api/v1/analytics/metrics/range`.</p>
+          </div>
+          <span class="pill good">Chart.js</span>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>Hoạt động theo ngày</h3>
+            <canvas id="trendChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Cơ cấu hiện tại</h3>
+            <canvas id="mixChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel section span-4">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">API Groups</h2>
+            <p class="section-sub">The whole contract surface in one view.</p>
+          </div>
+        </div>
+        <div class="api-list">
+          <div class="api-row"><div><code>A3</code> Access Gate</div><small class="warn-text">External</small></div>
+          <div class="api-row"><div><code>A1</code> Sensor ingestion</div><small class="good-text">Implemented</small></div>
+          <div class="api-row"><div><code>A2</code> Camera ingest/list</div><small class="good-text">Implemented</small></div>
+          <div class="api-row"><div><code>A4</code> Vision detections</div><small class="good-text">Implemented</small></div>
+          <div class="api-row"><div><code>A6</code> Core proxies</div><small class="good-text">Implemented</small></div>
+          <div class="api-row"><div><code>A7</code> Notification</div><small class="warn-text">External</small></div>
+        </div>
+      </section>
+
+      <section class="panel section span-6">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Endpoint trực tiếp</h2>
+            <p class="section-sub">Dữ liệu được làm mới từ service đang chạy.</p>
+          </div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>/api/v1/analytics/health</code></td><td id="rowHealth">Loading</td></tr>
+            <tr><td><code>/api/v1/analytics/dashboard</code></td><td id="rowDash">Loading</td></tr>
+            <tr><td><code>/api/v1/analytics/core/health</code></td><td id="rowCore">Loading</td></tr>
+            <tr><td><code>/api/v1/analytics/core/events/anomaly</code></td><td id="rowAnom">Loading</td></tr>
+            <tr><td><code>/api/v1/analytics/vision-detections</code></td><td id="rowVision">Sẵn sàng</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel section span-6">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Payload gần nhất</h2>
+            <p class="section-sub">Xem nhanh JSON trả về từ từng nguồn dữ liệu.</p>
+          </div>
+        </div>
+        <div class="feed">
+          <div class="feed-item">
+            <div class="meta"><strong>Root</strong><span id="rootStamp">--</span></div>
+            <pre id="rootJson">{}</pre>
+          </div>
+          <div class="feed-item">
+            <div class="meta"><strong>Dashboard</strong><span id="dashStamp">--</span></div>
+            <pre id="dashJson">{}</pre>
+          </div>
+          <div class="feed-item">
+            <div class="meta"><strong>Core health</strong><span id="coreStamp">--</span></div>
+            <pre id="coreJson">{}</pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel section span-12">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Sự kiện mẫu gần nhất</h2>
+            <p class="section-sub">Lấy từ các bản ghi mẫu trong bảng camera, sensor và vision.</p>
+          </div>
+          <div class="section-actions">
+            <select id="recentKindFilter" class="filter-select" aria-label="Filter recent events by kind">
+              <option value="all">Tất cả</option>
+              <option value="camera">Camera</option>
+              <option value="sensor">Sensor</option>
+              <option value="vision">Vision</option>
+            </select>
+            <button id="refreshRecentBtn" class="tab-btn" type="button">Làm mới</button>
+            <span class="pill good" id="recentCountPill">0 records</span>
+          </div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Identifier</th>
+              <th>Timestamp</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="recentSeedRows">
+            <tr><td colspan="4">Chưa có dữ liệu mẫu.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel section span-12">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Ma trận hợp đồng</h2>
+            <p class="section-sub">Tham chiếu nhanh cho toàn bộ hệ thống.</p>
+          </div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Endpoint</th>
+              <th>Owned by</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>A1</td><td><code>POST /api/v1/analytics/sensor</code></td><td>Analytics</td><td>Implemented</td></tr>
+            <tr><td>A2</td><td><code>POST/GET /api/v1/analytics/camera</code></td><td>Analytics</td><td>Implemented</td></tr>
+            <tr><td>A4</td><td><code>POST /api/v1/analytics/vision-detections</code></td><td>Analytics</td><td>Implemented</td></tr>
+            <tr><td>A5</td><td><code>GET /api/v1/analytics/dashboard</code></td><td>Analytics</td><td>Implemented</td></tr>
+            <tr><td>A3</td><td><code>POST /api/v1/events/access</code>, <code>GET /api/v1/logs</code>, <code>GET /api/v1/analytics</code></td><td>Access Gate</td><td>External</td></tr>
+            <tr><td>A6</td><td><code>GET /api/v1/analytics/core/*</code></td><td>Analytics proxy</td><td>Implemented</td></tr>
+            <tr><td>A7</td><td><code>POST/GET /notifications</code></td><td>External service</td><td>Referenced</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <div class="footer">
+      <span>Analytics Service UI</span>
+      <span>Open: <code>/ui</code> or <code>/docs</code></span>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const fmt = (value) => JSON.stringify(value, null, 2);
+    const setText = (id, value) => { document.getElementById(id).textContent = value; };
+    const setJson = (id, value) => { document.getElementById(id).textContent = fmt(value); };
+    const setStatus = (id, text, cls) => {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = `pill ${cls}`;
+    };
+
+    const sampleSeed = () => Date.now().toString(36);
+    let currentRecentKind = "all";
+
+    function setSampleStatus(message, cls = "good") {
+      const el = document.getElementById("sampleStatus");
+      el.textContent = message;
+      el.className = `pill ${cls}`;
+    }
+
+    function buildCameraSamples(seed) {
+      return [
+        {
+          event_id: `camera-sample-${seed}-1`,
+          event_type: "camera.vision.processed",
+          source_service: "team-camera",
+          camera_id: "cam-gate-a",
+          timestamp: "2026-06-17T08:32:12.450123",
+          location: "Main Gate A",
+          motion_detected: true,
+          motion_score: 99.9,
+          detections: [{ label: "person", confidence: 0.92 }],
+          unknown_person: false,
+          risk_level: "medium"
+        },
+        {
+          event_id: `camera-sample-${seed}-2`,
+          event_type: "camera.vision.processed",
+          source_service: "team-camera",
+          camera_id: "cam-hall-b",
+          timestamp: "2026-06-17T09:12:41.120000",
+          location: "Hall B",
+          motion_detected: true,
+          motion_score: 88.4,
+          detections: [{ label: "bag", confidence: 0.74 }],
+          unknown_person: true,
+          risk_level: "high"
+        }
+      ];
+    }
+
+    function buildSensorSamples(seed) {
+      return [
+        {
+          event_id: `sensor-sample-${seed}-1`,
+          event_type: "sensor.reading.processed",
+          source_service: "team-iot",
+          raw_event_id: `raw-iot-${seed}-1`,
+          device_id: "esp32-lab-a101",
+          timestamp: "2026-06-17T08:32:12+07:00",
+          location: "Lab A101",
+          temperature_c: 31.3,
+          humidity_percent: 49.0,
+          motion_detected: false,
+          light_lux: 781.0,
+          co2_ppm: 727.0,
+          smoke_ppm: 0.01,
+          battery_percent: 41.0,
+          status: "normal",
+          alert_level: "none",
+          reason: "environment_normal"
+        },
+        {
+          event_id: `sensor-sample-${seed}-2`,
+          event_type: "sensor.reading.processed",
+          source_service: "team-iot",
+          raw_event_id: `raw-iot-${seed}-2`,
+          device_id: "esp32-lab-a102",
+          timestamp: "2026-06-17T09:15:44+07:00",
+          location: "Lab A102",
+          temperature_c: 42.1,
+          humidity_percent: 88.5,
+          motion_detected: true,
+          light_lux: 300.0,
+          co2_ppm: 1950.0,
+          smoke_ppm: 1.2,
+          battery_percent: 75.0,
+          status: "danger",
+          alert_level: "high",
+          reason: "temperature_critical"
+        }
+      ];
+    }
+
+    function buildVisionSamples(seed) {
+      return [
+        {
+          detection_id: `vision-sample-${seed}-1`,
+          camera_id: "cam-gate-01",
+          frame_url: "http://127.0.0.1/frame-1.jpg",
+          timestamp: "2026-06-17T01:18:39",
+          anomaly_detected: true,
+          confidence_score: 0.87,
+          finding: {
+            finding_type: "object",
+            object_name: "bus",
+            risk_level: "medium",
+            description: "Detected object: bus"
+          },
+          model_mode: "yolo",
+          notes: "YOLO model: yolov8n.pt"
+        },
+        {
+          detection_id: `vision-sample-${seed}-2`,
+          camera_id: "cam-lobby-02",
+          frame_url: "http://127.0.0.1/frame-2.jpg",
+          timestamp: "2026-06-17T01:28:10",
+          anomaly_detected: true,
+          confidence_score: 0.94,
+          finding: {
+            finding_type: "person",
+            object_name: "unknown_person",
+            risk_level: "high",
+            description: "Unknown person near lobby"
+          },
+          model_mode: "mock-ai",
+          notes: "Seeded from UI"
+        }
+      ];
+    }
+
+    async function postJson(url, payload) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.detail?.message || data?.detail || `HTTP ${res.status}`);
+      }
+      return data;
+    }
+
+    async function loadSampleData() {
+      const button = document.getElementById("loadSampleBtn");
+      const seed = sampleSeed();
+      button.disabled = true;
+      button.textContent = "Đang tạo...";
+      setSampleStatus("Đang tạo dữ liệu mẫu...", "warn");
+
+      try {
+        const cameraPayloads = buildCameraSamples(seed);
+        const sensorPayloads = buildSensorSamples(seed);
+        const visionPayloads = buildVisionSamples(seed);
+
+        const cameraResults = [];
+        for (const payload of cameraPayloads) cameraResults.push(await postJson("/api/v1/analytics/camera", payload));
+
+        const sensorResults = [];
+        for (const payload of sensorPayloads) sensorResults.push(await postJson("/api/v1/analytics/sensor", payload));
+
+        const visionResults = [];
+        for (const payload of visionPayloads) visionResults.push(await postJson("/api/v1/analytics/vision-detections", payload));
+
+        setSampleStatus(`Đã tạo ${cameraResults.length + sensorResults.length + visionResults.length} sự kiện`, "good");
+        await loadDashboard();
+        await loadCharts();
+        await loadRecentSamples();
+      } catch (err) {
+        console.error(err);
+        setSampleStatus(`Tạo dữ liệu thất bại: ${err.message}`, "bad");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Tạo dữ liệu mẫu";
+      }
+    }
+
+    async function clearSampleData() {
+      const button = document.getElementById("clearSampleBtn");
+      button.disabled = true;
+      button.textContent = "Đang xóa...";
+      setSampleStatus("Đang xóa dữ liệu mẫu...", "warn");
+
+      try {
+        const res = await fetch("/api/v1/analytics/sample-data", { method: "DELETE" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data?.detail || `HTTP ${res.status}`);
+        }
+
+        const deleted = data.deleted || {};
+        setSampleStatus(`Đã xóa ${deleted.camera || 0}/${deleted.sensor || 0}/${deleted.vision || 0}`, "good");
+        await loadDashboard();
+        await loadCharts();
+        await loadRecentSamples();
+      } catch (err) {
+        console.error(err);
+        setSampleStatus(`Xóa dữ liệu thất bại: ${err.message}`, "bad");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Xóa dữ liệu mẫu";
+      }
+    }
+
+    function buildRecentSamplesUrl(kind = currentRecentKind) {
+      const params = new URLSearchParams({ limit: "12" });
+      if (kind && kind !== "all") {
+        params.set("kind", kind);
+      }
+      return `/api/v1/analytics/sample-data/recent?${params.toString()}`;
+    }
+
+    async function loadRecentSamples(kind = currentRecentKind) {
+      try {
+        currentRecentKind = kind || "all";
+        const filter = document.getElementById("recentKindFilter");
+        if (filter && filter.value !== currentRecentKind) {
+          filter.value = currentRecentKind;
+        }
+
+        const data = await fetchJson(buildRecentSamplesUrl(currentRecentKind));
+        const rows = document.getElementById("recentSeedRows");
+        const items = data.items || [];
+        document.getElementById("recentCountPill").textContent = `${items.length} records`;
+
+        if (!items.length) {
+          rows.innerHTML = '<tr><td colspan="4">Chưa có dữ liệu mẫu.</td></tr>';
+          return;
+        }
+
+        rows.innerHTML = items.map(item => {
+          const id = item.event_id || item.detection_id || "-";
+          const timestamp = item.timestamp || item.created_at || "-";
+          const details = item.kind === "vision"
+            ? `${item.camera_id || "-"} | ${item.model_mode || "-"} | ${(item.finding && item.finding.risk_level) || "-"}`
+            : `${item.location || "-"} | ${item.status || item.risk_level || "-"} | ${item.kind || "-"}`;
+          return `<tr><td>${item.kind || "-"}</td><td><code>${id}</code></td><td>${timestamp}</td><td>${details}</td></tr>`;
+        }).join("");
+      } catch (err) {
+        console.error(err);
+        document.getElementById("recentSeedRows").innerHTML = '<tr><td colspan="4">Không thể tải dữ liệu mẫu gần nhất.</td></tr>';
+      }
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.detail?.message || data?.detail || `HTTP ${res.status}`);
+      }
+      return data;
+    }
+
+    function updateClock() {
+      const now = new Date();
+      setText("clock", now.toLocaleString());
+    }
+
+    async function loadDashboard() {
+      const rootP = fetchJson("/").catch(err => ({ error: err.message }));
+      const healthP = fetchJson("/api/v1/analytics/health").catch(err => ({ error: err.message }));
+      const dashP = fetchJson("/api/v1/analytics/dashboard").catch(err => ({ error: err.message }));
+      const coreHealthP = fetchJson("/api/v1/analytics/core/health").catch(err => ({ error: err.message }));
+      const anomalyP = fetchJson("/api/v1/analytics/core/events/anomaly").catch(err => ({ error: err.message }));
+
+      const [root, health, dash, core, anomaly] = await Promise.all([rootP, healthP, dashP, coreHealthP, anomalyP]);
+      const now = new Date().toISOString();
+
+      setJson("rootJson", root);
+      setJson("dashJson", dash);
+      setJson("coreJson", core);
+      setText("rootStamp", now);
+      setText("dashStamp", now);
+      setText("coreStamp", now);
+
+      setText("svcName", root.name || "Analytics");
+      setText("svcVersion", root.version || "-");
+      setText("lastSync", new Date().toLocaleTimeString());
+
+      const overallOk = !root.error && !health.error && !dash.error;
+      setText("apiState", overallOk ? "Online" : "Partial");
+      setStatus("healthPill", health.error ? "Suy giảm" : "Khỏe", health.error ? "warn" : "good");
+      setStatus("corePill", core.error ? "Mất kết nối" : "Khỏe", core.error ? "bad" : "good");
+
+      if (dash && !dash.error) {
+        setText("cameraCount", dash.camera_analytics?.total_events ?? 0);
+        setText("sensorCount", dash.sensor_analytics?.total_events ?? 0);
+        setText("anomalyCount", dash.core_business?.summary?.total_anomaly_events ?? 0);
+      }
+
+      setText("rowHealth", health.error ? "Lỗi" : "OK");
+      setText("rowDash", dash.error ? "Lỗi" : "OK");
+      setText("rowCore", core.error ? "Lỗi" : "OK");
+      setText("rowAnom", anomaly.error ? "Lỗi" : "OK");
+      setText("rowVision", "Sẵn sàng");
+    }
+
+    function initTabs() {
+      const buttons = document.querySelectorAll(".tab-btn");
+      const panels = document.querySelectorAll(".tab-panel");
+      buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          buttons.forEach(b => b.classList.remove("active"));
+          panels.forEach(p => p.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById(btn.dataset.tab).classList.add("active");
+        });
+      });
+    }
+
+    async function loadCharts() {
+      const days = 7;
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - (days - 1));
+      const toIso = (d) => d.toISOString().split("T")[0];
+      const url = `/api/v1/analytics/metrics/range?start_date=${toIso(start)}&end_date=${toIso(end)}`;
+
+      let range = null;
+      try {
+        range = await fetchJson(url);
+      } catch (err) {
+        console.warn("Chart data unavailable:", err.message);
+        range = { data: [] };
+      }
+
+      const labels = (range.data || []).map(x => x.date);
+      const access = (range.data || []).map(x => x.total_access ?? 0);
+      const alerts = (range.data || []).map(x => x.total_alerts ?? 0);
+      const temp = (range.data || []).map(x => x.avg_temperature ?? 0);
+      const motion = (range.data || []).map(x => x.total_motion_detections ?? 0);
+      const anomaly = (range.data || []).map(x => x.total_anomaly_events ?? 0);
+
+      const lineCtx = document.getElementById("trendChart");
+      const mixCtx = document.getElementById("mixChart");
+
+      if (window.trendChart) window.trendChart.destroy();
+      if (window.mixChart) window.mixChart.destroy();
+
+      window.trendChart = new Chart(lineCtx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            { label: "Access", data: access, borderColor: "#67e8f9", backgroundColor: "rgba(103,232,249,.15)", tension: .35, fill: true },
+            { label: "Alerts", data: alerts, borderColor: "#f97316", backgroundColor: "rgba(249,115,22,.12)", tension: .35, fill: true },
+            { label: "Temp", data: temp, borderColor: "#34d399", backgroundColor: "rgba(52,211,153,.10)", tension: .35, fill: true },
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: "#dbeafe" } }
+          },
+          scales: {
+            x: { ticks: { color: "#97a8bf" }, grid: { color: "rgba(255,255,255,.05)" } },
+            y: { ticks: { color: "#97a8bf" }, grid: { color: "rgba(255,255,255,.05)" } }
+          }
+        }
+      });
+
+      window.mixChart = new Chart(mixCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Camera", "Sensor", "Motion", "Anomaly"],
+          datasets: [{
+            data: [
+              parseInt(document.getElementById("cameraCount").textContent || "0", 10) || 0,
+              parseInt(document.getElementById("sensorCount").textContent || "0", 10) || 0,
+              motion.reduce((a,b) => a + b, 0),
+              anomaly.reduce((a,b) => a + b, 0)
+            ],
+            backgroundColor: ["#67e8f9", "#34d399", "#fbbf24", "#fb7185"],
+            borderColor: "rgba(255,255,255,.12)",
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom", labels: { color: "#dbeafe" } }
+          }
+        }
+      });
+    }
+
+    document.getElementById("loadSampleBtn").addEventListener("click", loadSampleData);
+    document.getElementById("clearSampleBtn").addEventListener("click", clearSampleData);
+    document.getElementById("recentKindFilter").addEventListener("change", (event) => {
+      currentRecentKind = event.target.value || "all";
+      loadRecentSamples(currentRecentKind).catch(console.error);
+    });
+    document.getElementById("refreshRecentBtn").addEventListener("click", () => {
+      loadRecentSamples(currentRecentKind).catch(console.error);
+    });
+
+    updateClock();
+    initTabs();
+    loadDashboard().catch(err => {
+      console.error(err);
+      setText("apiState", "Lỗi");
+      setStatus("healthPill", "Lỗi", "bad");
+    });
+    loadCharts().catch(console.error);
+    loadRecentSamples().catch(console.error);
+    setInterval(updateClock, 1000);
+    setInterval(() => loadDashboard().catch(console.error), 30000);
+    setInterval(() => loadCharts().catch(console.error), 60000);
+    setInterval(() => loadRecentSamples().catch(console.error), 60000);
+  </script>
+</body>
+</html>

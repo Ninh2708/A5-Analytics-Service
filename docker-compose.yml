@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  analytics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: analytics-service
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=Analytics Service
+      - DEBUG=False
+      - DATABASE_URL=postgresql://analytics_user:analytics_pass@postgres:5432/analytics_db
+      - IOT_SERVICE_URL=http://iot-service:8001
+      - CAMERA_SERVICE_URL=http://camera-service:8002
+      - ACCESS_GATE_URL=http://access-gate:8003
+      - CORE_BUSINESS_URL=http://core-business:8004
+    depends_on:
+      - postgres
+    volumes:
+      - ./:/app
+    networks:
+      - analytics-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: analytics-postgres
+    environment:
+      - POSTGRES_USER=analytics_user
+      - POSTGRES_PASSWORD=analytics_pass
+      - POSTGRES_DB=analytics_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - analytics-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - analytics-network
+
+volumes:
+  postgres_data:
+
+networks:
+  analytics-network:
+    driver: bridge
