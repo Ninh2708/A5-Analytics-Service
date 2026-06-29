@@ -1,6 +1,5 @@
-version: '3.8'
-
 services:
+
   analytics-service:
     build:
       context: .
@@ -12,17 +11,16 @@ services:
       - APP_NAME=Analytics Service
       - DEBUG=False
       - DATABASE_URL=postgresql://analytics_user:analytics_pass@postgres:5432/analytics_db
-      - IOT_SERVICE_URL=http://iot-service:8001
-      - CAMERA_SERVICE_URL=http://camera-service:8002
-      - ACCESS_GATE_URL=http://access-gate:8003
-      - CORE_BUSINESS_URL=http://core-business:8004
+      - IOT_SERVICE_URL=http://26.160.13.137:8001
+      - CAMERA_SERVICE_URL=http://26.244.129.17:8002
+      - ACCESS_GATE_URL=http://26.206.154.32:8003
+      - CORE_BUSINESS_URL=http://26.64.81.15:8004
     depends_on:
-      - postgres
-    volumes:
-      - ./:/app
+      postgres:
+        condition: service_healthy
     networks:
       - analytics-network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   postgres:
     image: postgres:15-alpine
@@ -37,6 +35,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - analytics-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics_user -d analytics_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   pgadmin:
     image: dpage/pgadmin4:latest

@@ -43,9 +43,9 @@ $listenerPids = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction 
     Select-Object -ExpandProperty OwningProcess -Unique
 
 if ($listenerPids) {
-    foreach ($pid in $listenerPids) {
-        Write-Host "Stopping process still listening on port 8000 (PID $pid)..."
-        Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+    foreach ($procId in $listenerPids) {
+        Write-Host "Stopping process still listening on port 8000 (PID $procId)..."
+        Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
     }
 
     $deadline = (Get-Date).AddSeconds(10)

@@ -27,8 +27,12 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Debug mode: {settings.DEBUG}")
     # Tạo tất cả các bảng nếu chưa tồn tại
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables ensured.")
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables ensured.")
+    except Exception as e:
+        logger.error(f"Could not create database tables: {e}")
+        logger.warning("Service will start but database operations may fail.")
     yield
     # Shutdown
     logger.info(f"Shutting down {settings.APP_NAME}")
